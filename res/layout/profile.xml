@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:minHeight="60dp"
+        android:weightSum="2" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Name"
+            android:layout_weight="1"
+            android:padding="10dp"
+            android:gravity="center_vertical"
+            android:textColor="@android:color/black" />
+
+        <TextView />
+
+        <TextView
+            android:id="@+id/name"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Name"
+            android:layout_weight="1"
+            android:padding="10dp"
+            android:gravity="right|center_vertical"
+            android:textColor="@android:color/black" />
+
+        <TextView />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:minHeight="60dp"
+        android:weightSum="2" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Email"
+            android:padding="10dp"
+            android:gravity="center_vertical"
+            android:textColor="@android:color/black" />
+
+        <TextView />
+
+        <TextView
+            android:id="@+id/email"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Email"
+            android:padding="10dp"
+            android:gravity="right|center_vertical"
+            android:textColor="@android:color/black" />
+
+        <TextView />
+    </TableRow>
+
+    <TableRow
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:minHeight="60dp"
+        android:weightSum="2" >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="Role"
+            android:padding="10dp"
+            android:gravity="center_vertical"
+            android:textColor="@android:color/black" />
+
+        <TextView />
+
+        <TextView
+            android:id="@+id/role"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="Role"
+            android:padding="10dp"
+            android:layout_weight="1"
+            android:gravity="right|center_vertical"
+            android:textColor="@android:color/black" />
+
+        <TextView />
+    </TableRow>
+
+</TableLayout>

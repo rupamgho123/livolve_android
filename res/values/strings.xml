@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">Livolve</string>
+    <string name="app_desc">Changing the way people solve</string>
+    <string name="login">Login</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    
+    <string-array name="menu_list">
+        <item>Add an issue</item>
+        <item>Invites</item>
+        <item>Profile</item>
+        <item>Logout</item>
+    </string-array>
+</resources>
