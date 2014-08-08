@@ -13,17 +13,23 @@ import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
+import com.android.volley.Response.ErrorListener;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.hackday.livolve.DialogType;
 import com.hackday.livolve.Livolve;
@@ -37,36 +43,38 @@ public class IssueDetailActivity extends LivolveActivity{
 	ListView listView;
 	TextView summaryField;
 	TextView titleField;
-	
+
 	MyListAdapter adapter;
 	String issueId;
 	String title;
 	String summary;
-	
+
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.conversations);
 		getActionBar().setDisplayUseLogoEnabled(false);
-		
+		getWindow().setSoftInputMode(
+				WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
+
 		issueId = getIntent().getStringExtra(Constants.ISSUE_ID);
 		title = getIntent().getStringExtra(Constants.TITLE);
 		summary = getIntent().getStringExtra(Constants.SUMMARY);
 		listView = (ListView)findViewById(R.id.listView);
 		summaryField = (TextView)findViewById(R.id.summary);
 		titleField = (TextView)findViewById(R.id.title);
-		
+
 		summaryField.setText(summary);
 		titleField.setText(title);
-		
+
 		registerForContextMenu(listView);
 		callForData();
 	}
-	
+
 	void callForData(){
 		adapter = new MyListAdapter();
 		listView.setAdapter(adapter);
-		
+
 		showMyDialog("Fetching Conversations...", "conversation", DialogType.PROGRESS);
 		Livolve.requestQueue.add(new JsonArrayRequest(UrlConstants.getConversationUrl(issueId), 
 				new Listener<JSONArray>() {
@@ -128,7 +136,7 @@ public class IssueDetailActivity extends LivolveActivity{
 		{
 			this.list = list;
 		}
-		
+
 		MyListAdapter()
 		{
 			this.list = new ArrayList<IssueDetailActivity.Conversation>();
@@ -223,5 +231,37 @@ public class IssueDetailActivity extends LivolveActivity{
 		default:
 			return super.onContextItemSelected(item);
 		}
+	}
+
+	public void submit(View v) throws JSONException{
+		EditText field = (EditText) findViewById(R.id.textField);
+		String data = field.getText().toString();
+		field.setText("");
+		hideSoftKeyboard();
+		JSONObject jsonRequest = new JSONObject();
+		jsonRequest.put("value", data);
+		jsonRequest.put("user_id", Util.getUserId(getApplicationContext()));
+		jsonRequest.put("issue_id", issueId);
+
+//		Toast.makeText(this, "Added conversation...", Toast.LENGTH_SHORT).show();
+
+		Livolve.requestQueue.add(new JsonObjectRequest(UrlConstants.createConversationUrl(), jsonRequest, new Response.Listener<JSONObject>() {
+
+			@Override
+			public void onResponse(JSONObject response) {
+				callForData();
+			}
+		}, new ErrorListener() {
+
+			@Override
+			public void onErrorResponse(VolleyError error) {
+
+			}
+		}));
+	}
+
+	public void hideSoftKeyboard() {
+		InputMethodManager inputMethodManager = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+		inputMethodManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
 	}
 }

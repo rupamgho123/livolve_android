@@ -23,6 +23,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="@string/app_desc"
+        android:textStyle="italic"
         android:textSize="@dimen/desc_text_size" />
 	</LinearLayout>
 </RelativeLayout>

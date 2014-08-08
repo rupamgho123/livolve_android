@@ -7,19 +7,23 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.annotation.SuppressLint;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.FragmentTransaction;
 import android.app.ListFragment;
 import android.content.res.Configuration;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.support.v4.app.ActionBarDrawerToggle;
 import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
@@ -27,10 +31,12 @@ import android.widget.BaseAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.android.volley.toolbox.StringRequest;
 import com.google.android.gcm.GCMRegistrar;
 import com.hackday.livolve.DialogType;
 import com.hackday.livolve.Issue;
@@ -87,7 +93,7 @@ public class MainActivity extends LivolveActivity{
 
 		// Set the drawer toggle as the DrawerListener
 		mDrawerLayout.setDrawerListener(mDrawerToggle);
-		
+
 		initGCM();
 	}
 
@@ -98,9 +104,9 @@ public class MainActivity extends LivolveActivity{
 		GCMRegistrar.checkManifest(this);
 		final String regId = GCMRegistrar.getRegistrationId(this);
 		if (regId.equals("")) {
-		  GCMRegistrar.register(this, "522992358628");
+			GCMRegistrar.register(this, "522992358628");
 		} else {
-		  Log.v(TAG, "Already registered");
+			Log.v(TAG, "Already registered");
 		}
 	}
 
@@ -112,18 +118,20 @@ public class MainActivity extends LivolveActivity{
 		addDefaultTabs();
 	}
 
-
-
+	MyListFragment frag1;
+	MyListFragment frag2;
+	
 	private void addDefaultTabs() {
 		getActionBar().removeAllTabs();
 
-
+		frag1 = new MyListFragment(IssueType.MINE);
+		frag2 = new MyListFragment(IssueType.OTHERS);
 		getActionBar().addTab(getActionBar().newTab()
 				.setText("My Issues")
-				.setTabListener(new MyTabListener(new MyListFragment(),IssueType.MINE)), true);
+				.setTabListener(new MyTabListener(frag1,IssueType.MINE)), true);
 		getActionBar().addTab(getActionBar().newTab()
 				.setText("Other Issues")
-				.setTabListener(new MyTabListener(new MyListFragment(),IssueType.OTHERS)));
+				.setTabListener(new MyTabListener(frag2,IssueType.OTHERS)));
 	}
 
 	private class MyTabListener implements ActionBar.TabListener{
@@ -185,7 +193,7 @@ public class MainActivity extends LivolveActivity{
 
 	}
 
-	
+
 
 	static class ViewHolder {
 		TextView value;
@@ -205,7 +213,7 @@ public class MainActivity extends LivolveActivity{
 		{
 			this.issues = issues;
 		}
-		
+
 		private List<Issue> getList(){
 			return issues;
 		}
@@ -239,8 +247,12 @@ public class MainActivity extends LivolveActivity{
 			ViewHolder viewHolder = (ViewHolder)arg1.getTag();
 			Issue item = (Issue)getItem(arg0);
 			viewHolder.status.setText(item.getStatus());
+			viewHolder.status.setVisibility(View.INVISIBLE);
 			viewHolder.value.setText(item.getValue());
-
+			if(item.getStatus().equalsIgnoreCase("deleted"))
+				viewHolder.value.setPaintFlags(viewHolder.value.getPaintFlags() | Paint.STRIKE_THRU_TEXT_FLAG);
+			else
+				viewHolder.value.setPaintFlags(viewHolder.value.getPaintFlags() & (~Paint.STRIKE_THRU_TEXT_FLAG));
 			return arg1;
 		}
 
@@ -341,6 +353,11 @@ public class MainActivity extends LivolveActivity{
 
 	public static class MyListFragment extends ListFragment{
 
+		IssueType mine;
+		public MyListFragment(IssueType mine) {
+			this.mine = mine;
+		}
+
 		@Override
 		public void onActivityCreated(Bundle savedInstanceState) {
 			super.onActivityCreated(savedInstanceState);
@@ -354,12 +371,52 @@ public class MainActivity extends LivolveActivity{
 					LivolveActivity activity = (LivolveActivity)getActivity();
 					ListBaseAdapter adapter = (ListBaseAdapter)getListView().getAdapter();
 					List<Issue> list = adapter.getList();
-				    Issue issue = list.get(arg2);
-				    extras.putString(Constants.TITLE, issue.getValue());
-				    extras.putString(Constants.SUMMARY, issue.getSummary());
-				    activity.goTo(IssueDetailActivity.class, extras);
+					Issue issue = list.get(arg2);
+					extras.putString(Constants.TITLE, issue.getValue());
+					extras.putString(Constants.SUMMARY, issue.getSummary());
+					activity.goTo(IssueDetailActivity.class, extras);
 				}
 			});
+
+			if(mine == IssueType.MINE)
+				getActivity().registerForContextMenu(getListView());
 		}
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		menu.setHeaderTitle("Options");
+		menu.add(0,0,0,"Close Issue");
+		super.onCreateContextMenu(menu, v, menuInfo);
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+		ListBaseAdapter adapter = (ListBaseAdapter)frag1.getListView().getAdapter();
+		List<Issue> list = adapter.getList();
+		switch(item.getOrder()){
+		case 0:
+			markClosed(list.get(info.position));
+		default:
+			return super.onContextItemSelected(item);
+		}
+	}
+
+	void markClosed(Issue issue){
+		Livolve.requestQueue.add(new StringRequest(Request.Method.PUT,UrlConstants.updateIssueUrl(issue.getId(),"deleted"),new Listener<String>() {
+
+			@Override
+			public void onResponse(String response) {
+				addDefaultTabs();
+			}
+		}, new Response.ErrorListener() {
+
+			@Override
+			public void onErrorResponse(VolleyError error) {
+			}
+
+		}));
 	}
 }

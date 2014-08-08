@@ -3,30 +3,85 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent" >
 
-    <LinearLayout android:id="@+id/header"
+    <RelativeLayout
+        android:id="@+id/header"
         android:layout_width="fill_parent"
-	    android:layout_height="wrap_content"
-	    android:minHeight="80dp"
-	    android:gravity="center_vertical"
-	    android:orientation="vertical">
-	<TextView android:layout_width="wrap_content"
-	    android:id="@+id/title"
-	    android:text="Title"
-	    android:textColor="@android:color/black"
-	    android:layout_height="wrap_content"/>
-	<TextView android:layout_width="wrap_content"
-	    android:id="@+id/summary"
-	    android:text="Summary"
-	    android:textColor="@android:color/darker_gray"
-	    android:textStyle="italic"
-	    android:layout_height="wrap_content"/>
-    </LinearLayout>
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:minHeight="80dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=" Title:"
+            android:id="@+id/titleTag"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:layout_marginLeft="5dp"
+            android:layout_toRightOf="@+id/titleTag"
+            android:textColor="@android:color/holo_blue_dark" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/title"
+            android:text="Detail:"
+            android:id="@+id/summaryTag"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/summary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:layout_toRightOf="@+id/summaryTag"
+            android:layout_marginLeft="5dp"
+            android:layout_below="@+id/title"                      
+            android:textColor="@android:color/darker_gray"
+            android:textStyle="italic" />
+
+    </RelativeLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="4px"
+        android:layout_below="@+id/header"        
+        android:background="@android:color/holo_blue_dark" />
 
     <ListView
         android:id="@+id/listView"
-        android:layout_below="@id/header"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_above="@+id/textField"
+        android:layout_below="@id/header"
+        android:layout_marginTop="5dp"
         android:orientation="vertical" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_above="@+id/textField"
+        android:background="@android:color/darker_gray" />
+
+    <EditText
+        android:id="@+id/textField"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:paddingRight="50dp"
+        android:layout_alignParentBottom="true" />
+
+    <Button
+        android:id="@+id/submit"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentRight="true"
+        android:onClick="submit"
+        android:text="Post" />
 
 </RelativeLayout>

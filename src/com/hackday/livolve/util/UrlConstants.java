@@ -46,4 +46,12 @@ public class UrlConstants {
 	public static String updateInviteUrl(String inviteId, String status) {
 		return BASE_DOMAIN + "/invite/"+inviteId+"/status/"+status;
 	}
+
+	public static String createConversationUrl() {
+		return BASE_DOMAIN + "/conversation/new";
+	}
+	
+	public static String updateIssueUrl(String id,String status) {
+		return BASE_DOMAIN + "/issue/"+id+"/status/"+status;
+	}
 }
