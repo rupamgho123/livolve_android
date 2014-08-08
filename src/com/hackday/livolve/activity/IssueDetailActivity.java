@@ -9,10 +9,10 @@ import org.json.JSONObject;
 
 import android.os.Bundle;
 import android.view.ContextMenu;
+import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ContextMenu.ContextMenuInfo;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
@@ -35,16 +35,30 @@ import com.hackday.livolve.util.Util;
 public class IssueDetailActivity extends LivolveActivity{
 
 	ListView listView;
+	TextView summaryField;
+	TextView titleField;
+	
 	MyListAdapter adapter;
 	String issueId;
+	String title;
+	String summary;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.conversations);
+		getActionBar().setDisplayUseLogoEnabled(false);
+		
 		issueId = getIntent().getStringExtra(Constants.ISSUE_ID);
+		title = getIntent().getStringExtra(Constants.TITLE);
+		summary = getIntent().getStringExtra(Constants.SUMMARY);
 		listView = (ListView)findViewById(R.id.listView);
-
+		summaryField = (TextView)findViewById(R.id.summary);
+		titleField = (TextView)findViewById(R.id.title);
+		
+		summaryField.setText(summary);
+		titleField.setText(title);
+		
 		registerForContextMenu(listView);
 		callForData();
 	}
@@ -54,7 +68,7 @@ public class IssueDetailActivity extends LivolveActivity{
 		listView.setAdapter(adapter);
 		
 		showMyDialog("Fetching Conversations...", "conversation", DialogType.PROGRESS);
-		Livolve.requestQueue.add(new JsonArrayRequest(UrlConstants.getConversationUrl(getApplicationContext(),issueId), 
+		Livolve.requestQueue.add(new JsonArrayRequest(UrlConstants.getConversationUrl(issueId), 
 				new Listener<JSONArray>() {
 
 			@Override

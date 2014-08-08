@@ -31,7 +31,9 @@ import com.android.volley.Response;
 import com.android.volley.Response.Listener;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
+import com.google.android.gcm.GCMRegistrar;
 import com.hackday.livolve.DialogType;
+import com.hackday.livolve.Issue;
 import com.hackday.livolve.Livolve;
 import com.hackday.livolve.R;
 import com.hackday.livolve.util.Constants;
@@ -40,11 +42,11 @@ import com.hackday.livolve.util.UrlConstants;
 import com.hackday.livolve.util.Util;
 
 public class MainActivity extends LivolveActivity{
-	
+
 	private String[] mPlanetTitles;
-    private DrawerLayout mDrawerLayout;
-    private ListView mDrawerList;
-    private ActionBarDrawerToggle mDrawerToggle;
+	private DrawerLayout mDrawerLayout;
+	private ListView mDrawerList;
+	private ActionBarDrawerToggle mDrawerToggle;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -54,41 +56,56 @@ public class MainActivity extends LivolveActivity{
 		getActionBar().setHomeButtonEnabled(true);
 		getActionBar().setDisplayUseLogoEnabled(false);
 		getActionBar().setIcon(R.drawable.ic_drawer);
-		
+
 		mPlanetTitles = getResources().getStringArray(R.array.menu_list);
-        mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
-        mDrawerList = (ListView) findViewById(R.id.left_drawer);
+		mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);
+		mDrawerList = (ListView) findViewById(R.id.left_drawer);
 
-        // Set the adapter for the list view
-        mDrawerList.setAdapter(new ArrayAdapter<String>(this,
-                R.layout.list_item, R.id.textView, mPlanetTitles));
-        // Set the list's click listener
-        mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
-        
-        mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
-                R.drawable.ic_drawer, R.string.app_name, R.string.app_name) {
+		// Set the adapter for the list view
+		mDrawerList.setAdapter(new ArrayAdapter<String>(this,
+				R.layout.list_item, R.id.textView, mPlanetTitles));
+		// Set the list's click listener
+		mDrawerList.setOnItemClickListener(new DrawerItemClickListener());
 
-            /** Called when a drawer has settled in a completely closed state. */
-            public void onDrawerClosed(View view) {
-                super.onDrawerClosed(view);
-//                getActionBar().setTitle(mTitle);
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-            }
+		mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout,
+				R.drawable.ic_drawer, R.string.app_name, R.string.app_name) {
 
-            /** Called when a drawer has settled in a completely open state. */
-            public void onDrawerOpened(View drawerView) {
-                super.onDrawerOpened(drawerView);
-//                getActionBar().setTitle(mDrawerTitle);
-                invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
-            }
-        };
+			/** Called when a drawer has settled in a completely closed state. */
+			public void onDrawerClosed(View view) {
+				super.onDrawerClosed(view);
+				//                getActionBar().setTitle(mTitle);
+				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+			}
 
-        // Set the drawer toggle as the DrawerListener
-        mDrawerLayout.setDrawerListener(mDrawerToggle);
+			/** Called when a drawer has settled in a completely open state. */
+			public void onDrawerOpened(View drawerView) {
+				super.onDrawerOpened(drawerView);
+				//                getActionBar().setTitle(mDrawerTitle);
+				invalidateOptionsMenu(); // creates call to onPrepareOptionsMenu()
+			}
+		};
+
+		// Set the drawer toggle as the DrawerListener
+		mDrawerLayout.setDrawerListener(mDrawerToggle);
+		
+		initGCM();
 	}
-	
-	
-	
+
+
+
+	private void initGCM() {
+		GCMRegistrar.checkDevice(this);
+		GCMRegistrar.checkManifest(this);
+		final String regId = GCMRegistrar.getRegistrationId(this);
+		if (regId.equals("")) {
+		  GCMRegistrar.register(this, "522992358628");
+		} else {
+		  Log.v(TAG, "Already registered");
+		}
+	}
+
+
+
 	@Override
 	protected void onResume() {
 		super.onResume();
@@ -99,24 +116,24 @@ public class MainActivity extends LivolveActivity{
 
 	private void addDefaultTabs() {
 		getActionBar().removeAllTabs();
-		
-	    
-	    getActionBar().addTab(getActionBar().newTab()
-                .setText("My Issues")
-                .setTabListener(new MyTabListener(new MyListFragment(),IssueType.MINE)), true);
+
+
 		getActionBar().addTab(getActionBar().newTab()
-                .setText("Other Issues")
-                .setTabListener(new MyTabListener(new MyListFragment(),IssueType.OTHERS)));
+				.setText("My Issues")
+				.setTabListener(new MyTabListener(new MyListFragment(),IssueType.MINE)), true);
+		getActionBar().addTab(getActionBar().newTab()
+				.setText("Other Issues")
+				.setTabListener(new MyTabListener(new MyListFragment(),IssueType.OTHERS)));
 	}
-	
+
 	private class MyTabListener implements ActionBar.TabListener{
-		
+
 		public ListFragment fragment;
 		public IssueType type;
 
 		public MyTabListener(ListFragment fragment,IssueType type) {
-		    this.fragment = fragment;
-		    this.type = type;
+			this.fragment = fragment;
+			this.type = type;
 		}
 
 		@Override
@@ -128,21 +145,22 @@ public class MainActivity extends LivolveActivity{
 		public void onTabSelected(Tab tab, FragmentTransaction ft) {
 			mDrawerLayout.closeDrawers();
 			ft.replace(R.id.content_frame, fragment,"list");
-			Livolve.requestQueue.add(new JsonArrayRequest(UrlConstants.getIssuesUrl(type,getApplicationContext()),new Listener<JSONArray>() {
+			Livolve.requestQueue.add(new JsonArrayRequest(UrlConstants.getIssuesUrl(type,Util.getUserId(getApplicationContext())),new Listener<JSONArray>() {
 
 				@Override
 				public void onResponse(JSONArray response) {
-					
+
 					List<Issue> list = new ArrayList<Issue>();
 					for(int i=0;i<response.length();i++)
 					{
 						try {
 							JSONObject json = (JSONObject)response.get(i);
 							String id = json.getString(Constants.ID);
-							String value = json.getString(Constants.VALUE);
+							String value = json.getString(Constants.TITLE);
 							String status = json.getString(Constants.STATUS);
 							String userId = json.getString(Constants.USER_ID);
-							list.add(new Issue(id,value,status,userId));
+							String summary = json.getString(Constants.SUMMARY);
+							list.add(new Issue(id,value,status,userId,summary));
 						} catch (JSONException e) {
 							e.printStackTrace();
 						}
@@ -156,7 +174,7 @@ public class MainActivity extends LivolveActivity{
 				public void onErrorResponse(VolleyError error) {
 					showMyDialog(Util.getMessageFromVolleyError(error), "error", DialogType.ERROR);
 				}
-				
+
 			}));
 		}
 
@@ -164,75 +182,34 @@ public class MainActivity extends LivolveActivity{
 		public void onTabUnselected(Tab tab, FragmentTransaction ft) {
 			ft.remove(fragment);
 		}
-		
+
 	}
+
 	
-	private class Issue{
-		private String id;
-		private String value;
-		private String status;
-		private String userId;
 
-		public Issue(String id, String value, String status, String userId) {
-			setId(id);
-			setStatus(status);
-			setUserId(userId);
-			setValue(value);
-		}
-		
-		public String getId() {
-			return id;
-		}
-
-		public void setId(String id) {
-			this.id = id;
-		}
-
-		public String getValue() {
-			return value;
-		}
-
-		public void setValue(String value) {
-			this.value = value;
-		}
-
-		public String getStatus() {
-			return status;
-		}
-
-		public void setStatus(String status) {
-			this.status = status;
-		}
-
-		public String getUserId() {
-			return userId;
-		}
-
-		public void setUserId(String userId) {
-			this.userId = userId;
-		}
-		
-	}
-	
 	static class ViewHolder {
-		  TextView value;
-		  TextView status;
+		TextView value;
+		TextView status;
 	}
-	
+
 	private class ListBaseAdapter extends BaseAdapter{
-		
+
 		private List<Issue> issues;
-		
+
 		ListBaseAdapter()
 		{
 			issues = new ArrayList<Issue>();
 		}
-		
+
 		ListBaseAdapter(List<Issue> issues)
 		{
 			this.issues = issues;
 		}
 		
+		private List<Issue> getList(){
+			return issues;
+		}
+
 		@Override
 		public int getCount() {
 			return issues.size();
@@ -245,7 +222,7 @@ public class MainActivity extends LivolveActivity{
 
 		@Override
 		public long getItemId(int arg0) {
-			return Long.parseLong(issues.get(arg0).id);
+			return Long.parseLong(issues.get(arg0).getId());
 		}
 
 		@Override
@@ -258,15 +235,15 @@ public class MainActivity extends LivolveActivity{
 				viewHolder.value = (TextView) arg1.findViewById(R.id.value);
 				arg1.setTag(viewHolder);
 			}
-			
+
 			ViewHolder viewHolder = (ViewHolder)arg1.getTag();
 			Issue item = (Issue)getItem(arg0);
 			viewHolder.status.setText(item.getStatus());
 			viewHolder.value.setText(item.getValue());
-			
+
 			return arg1;
 		}
-		
+
 	}
 
 	@Override
@@ -283,24 +260,24 @@ public class MainActivity extends LivolveActivity{
 	public String getTag() {
 		return "MainActivity";
 	}
-	
+
 	private class DrawerItemClickListener implements ListView.OnItemClickListener {
-	    @Override
-	    public void onItemClick(AdapterView parent, View view, int position, long id) {
-	        selectItem(position);
-	    }
+		@Override
+		public void onItemClick(AdapterView parent, View view, int position, long id) {
+			selectItem(position);
+		}
 	}
-	
+
 	/* Called whenever we call invalidateOptionsMenu() */
-    @Override
-    public boolean onPrepareOptionsMenu(Menu menu) {
-        // If the nav drawer is open, hide action items related to the content view
-//        boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
-//        menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
-        return super.onPrepareOptionsMenu(menu);
-    }
-    
-    public void selectItem(int position) {
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
+		// If the nav drawer is open, hide action items related to the content view
+		//        boolean drawerOpen = mDrawerLayout.isDrawerOpen(mDrawerList);
+		//        menu.findItem(R.id.action_websearch).setVisible(!drawerOpen);
+		return super.onPrepareOptionsMenu(menu);
+	}
+
+	public void selectItem(int position) {
 		switch(position){
 		case 0:
 			addIssue();
@@ -315,7 +292,7 @@ public class MainActivity extends LivolveActivity{
 			logout();
 			break;
 		}
-		
+
 		mDrawerLayout.closeDrawers();
 	}
 
@@ -324,7 +301,7 @@ public class MainActivity extends LivolveActivity{
 	}
 
 	private void showInvites() {
-		
+		goTo(InvitesActivity.class);
 	}
 
 	private void addIssue() {
@@ -338,28 +315,51 @@ public class MainActivity extends LivolveActivity{
 	}
 
 	@Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
-        // Sync the toggle state after onRestoreInstanceState has occurred.
-        mDrawerToggle.syncState();
-    }
+	protected void onPostCreate(Bundle savedInstanceState) {
+		super.onPostCreate(savedInstanceState);
+		// Sync the toggle state after onRestoreInstanceState has occurred.
+		mDrawerToggle.syncState();
+	}
 
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        mDrawerToggle.onConfigurationChanged(newConfig);
-    }
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		mDrawerToggle.onConfigurationChanged(newConfig);
+	}
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Pass the event to ActionBarDrawerToggle, if it returns
-        // true, then it has handled the app icon touch event
-        if (mDrawerToggle.onOptionsItemSelected(item)) {
-          return true;
-        }
-        // Handle your other action bar items...
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Pass the event to ActionBarDrawerToggle, if it returns
+		// true, then it has handled the app icon touch event
+		if (mDrawerToggle.onOptionsItemSelected(item)) {
+			return true;
+		}
+		// Handle your other action bar items...
 
-        return super.onOptionsItemSelected(item);
-    }
+		return super.onOptionsItemSelected(item);
+	}
 
+	public static class MyListFragment extends ListFragment{
+
+		@Override
+		public void onActivityCreated(Bundle savedInstanceState) {
+			super.onActivityCreated(savedInstanceState);
+			getListView().setOnItemClickListener(new OnItemClickListener() {
+
+				@Override
+				public void onItemClick(AdapterView<?> arg0, View arg1,
+						int arg2, long arg3) {
+					Bundle extras = new Bundle();
+					extras.putString(Constants.ISSUE_ID, Long.toString(arg3));
+					LivolveActivity activity = (LivolveActivity)getActivity();
+					ListBaseAdapter adapter = (ListBaseAdapter)getListView().getAdapter();
+					List<Issue> list = adapter.getList();
+				    Issue issue = list.get(arg2);
+				    extras.putString(Constants.TITLE, issue.getValue());
+				    extras.putString(Constants.SUMMARY, issue.getSummary());
+				    activity.goTo(IssueDetailActivity.class, extras);
+				}
+			});
+		}
+	}
 }

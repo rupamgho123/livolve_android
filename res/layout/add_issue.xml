@@ -35,6 +35,7 @@
         android:ems="10" />
     <ListView android:layout_width="match_parent"
         android:id="@+id/listView"
+        android:listSelector="@android:color/transparent"
         android:layout_height="200dp"/>
 
     <Button

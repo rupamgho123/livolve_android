@@ -1,16 +1,13 @@
 package com.hackday.livolve.util;
 
-import android.content.Context;
-
 public class UrlConstants {
-	private static final String BASE_DOMAIN = "http://172.17.91.244:3000";
+	private static final String BASE_DOMAIN = "http://172.17.91.132:3000";
 	
 	public static String getLoginUrl(){
 		return BASE_DOMAIN + "/user/login";
 	}
 	
-	public static String getIssuesUrl(IssueType type, Context context) {
-		String id = Util.getUserId(context);
+	public static String getIssuesUrl(IssueType type, String id) {
 		switch(type)
 		{
 		case MINE:
@@ -22,7 +19,7 @@ public class UrlConstants {
 		}
 	}
 	
-	public static String getConversationUrl(Context applicationContext,String issueId) {
+	public static String getConversationUrl(String issueId) {
 		return BASE_DOMAIN + "/conversation/"+issueId;
 	}
 	
@@ -40,5 +37,13 @@ public class UrlConstants {
 	
 	public static String getInviteFriendsUrl(){
 		return BASE_DOMAIN + "/invite/bulk";
+	}
+	
+	public static String getInvitesForMe(String userId) {
+		return BASE_DOMAIN + "/invite/"+userId+"/status";
+	}
+	
+	public static String updateInviteUrl(String userId, String status) {
+		return BASE_DOMAIN + "/invite/"+userId+"/status/"+status;
 	}
 }

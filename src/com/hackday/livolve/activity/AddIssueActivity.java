@@ -7,6 +7,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.os.Bundle;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.EditText;
+import android.widget.ListView;
+import android.widget.TextView;
+
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonArrayRequest;
@@ -17,16 +27,6 @@ import com.hackday.livolve.R;
 import com.hackday.livolve.util.Constants;
 import com.hackday.livolve.util.UrlConstants;
 import com.hackday.livolve.util.Util;
-
-import android.os.Bundle;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TextView;
 
 public class AddIssueActivity extends LivolveActivity{
 
@@ -41,6 +41,8 @@ public class AddIssueActivity extends LivolveActivity{
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.add_issue);
 		listView = (ListView)findViewById(R.id.listView);
+		listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
+		
 		title = (EditText)findViewById(R.id.title);
 		summary = (EditText)findViewById(R.id.summary);
 		listView.setOnItemClickListener(new OnItemClickListener() {
@@ -49,6 +51,8 @@ public class AddIssueActivity extends LivolveActivity{
 			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
 					long arg3) {
 				arg0.setSelection(arg2);
+				arg1.setSelected(true);
+				listView.setItemChecked(arg2, true);
 			}
 		});
 		fetchFriends();

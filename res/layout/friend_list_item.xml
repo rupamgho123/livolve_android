@@ -5,6 +5,7 @@
     android:minHeight="40dp"
     android:gravity="center_vertical"
     android:padding="5dp"
+    android:background="@drawable/listitem_bg"
     android:orientation="vertical" >
 
     <TextView
