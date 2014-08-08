@@ -1,7 +1,7 @@
 package com.hackday.livolve.util;
 
 public class UrlConstants {
-	private static final String BASE_DOMAIN = "http://172.17.91.132:3000";
+	private static final String BASE_DOMAIN = "http://172.17.91.244:3000";
 	
 	public static String getLoginUrl(){
 		return BASE_DOMAIN + "/user/login";
@@ -40,10 +40,10 @@ public class UrlConstants {
 	}
 	
 	public static String getInvitesForMe(String userId) {
-		return BASE_DOMAIN + "/invite/"+userId+"/status";
+		return BASE_DOMAIN + "/invite/"+userId+"/pending";
 	}
 	
-	public static String updateInviteUrl(String userId, String status) {
-		return BASE_DOMAIN + "/invite/"+userId+"/status/"+status;
+	public static String updateInviteUrl(String inviteId, String status) {
+		return BASE_DOMAIN + "/invite/"+inviteId+"/status/"+status;
 	}
 }
