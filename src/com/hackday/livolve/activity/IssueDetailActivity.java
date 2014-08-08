@@ -7,7 +7,12 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.MenuItem;
@@ -43,11 +48,42 @@ public class IssueDetailActivity extends LivolveActivity{
 	ListView listView;
 	TextView summaryField;
 	TextView titleField;
+	List<Conversation> list;
 
 	MyListAdapter adapter;
 	String issueId;
 	String title;
 	String summary;
+
+	BroadcastReceiver receiver = new BroadcastReceiver() {
+
+		@Override
+		public void onReceive(Context arg0, Intent arg1) {
+			try
+			{
+				Bundle extras = arg1.getExtras();
+				JSONObject user = new JSONObject(extras.getString("user"));
+				//				String userid = user.getString(Constants.ID);
+				//				String storedId = Util.getUserId(getApplicationContext());
+				//				if(userid.equals(storedId))
+				//						return;
+
+				String userName = user.getString(Constants.NAME);
+				String date = extras.getString(Constants.CREATED_AT);
+				String content = "answered by "+userName+" on "+date;
+				String id = extras.getString(Constants.ID);
+				Conversation conversation = new Conversation(Integer.parseInt(id),extras.getString(Constants.VALUE),content,false);
+				if(!list.contains(conversation))
+					list.add(conversation);
+				
+				adapter.notifyDataSetChanged();
+				listView.smoothScrollToPosition(adapter.getCount());
+			}
+			catch(Exception ex){
+				ex.printStackTrace();
+			}
+		}
+	};
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -69,6 +105,19 @@ public class IssueDetailActivity extends LivolveActivity{
 
 		registerForContextMenu(listView);
 		callForData();
+
+		IntentFilter intentFilter = new IntentFilter();
+		intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+		intentFilter.addAction(Constants.CONVERSATION_ACTION);
+
+		registerReceiver(receiver, intentFilter);
+	}
+
+
+	@Override
+	protected void onDestroy() {
+		super.onDestroy();
+		unregisterReceiver(receiver);
 	}
 
 	void callForData(){
@@ -82,7 +131,7 @@ public class IssueDetailActivity extends LivolveActivity{
 			@Override
 			public void onResponse(JSONArray response) {
 				removeMyDialog("conversation");
-				List<Conversation> list = new ArrayList<IssueDetailActivity.Conversation>();
+				list = new ArrayList<IssueDetailActivity.Conversation>();
 				for(int i=0;i<response.length();i++)
 				{
 					try {
@@ -120,6 +169,12 @@ public class IssueDetailActivity extends LivolveActivity{
 			this.answer = answer;
 			this.detail = detail;
 			this.isAnswer = isAnswer;
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			Conversation obj = (Conversation) o;
+			return obj.id == this.id;
 		}
 	}
 
@@ -243,13 +298,11 @@ public class IssueDetailActivity extends LivolveActivity{
 		jsonRequest.put("user_id", Util.getUserId(getApplicationContext()));
 		jsonRequest.put("issue_id", issueId);
 
-//		Toast.makeText(this, "Added conversation...", Toast.LENGTH_SHORT).show();
-
 		Livolve.requestQueue.add(new JsonObjectRequest(UrlConstants.createConversationUrl(), jsonRequest, new Response.Listener<JSONObject>() {
 
 			@Override
 			public void onResponse(JSONObject response) {
-				callForData();
+				//				callForData();
 			}
 		}, new ErrorListener() {
 

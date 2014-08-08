@@ -7,6 +7,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.app.AlertDialog;
+import android.app.AlertDialog.Builder;
+import android.content.DialogInterface;
+import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.os.Bundle;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,31 +35,16 @@ import com.hackday.livolve.util.Util;
 
 public class AddIssueActivity extends LivolveActivity{
 
-	ListView listView;
 	EditText title;
 	EditText summary;
-	MyListAdapter adapter;
 	List<User> list;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.add_issue);
-		listView = (ListView)findViewById(R.id.listView);
-		listView.setChoiceMode(ListView.CHOICE_MODE_SINGLE);
-		
 		title = (EditText)findViewById(R.id.title);
 		summary = (EditText)findViewById(R.id.summary);
-		listView.setOnItemClickListener(new OnItemClickListener() {
-
-			@Override
-			public void onItemClick(AdapterView<?> arg0, View arg1, int arg2,
-					long arg3) {
-				arg0.setSelection(arg2);
-				arg1.setSelected(true);
-				listView.setItemChecked(arg2, true);
-			}
-		});
 		fetchFriends();
 	}
 
@@ -66,7 +56,7 @@ public class AddIssueActivity extends LivolveActivity{
 		public long id;
 		public CharSequence name;
 	}
-	
+
 	private void fetchFriends() {
 		String teamId = Util.getTeamId(getApplicationContext());
 		Livolve.requestQueue.add(new JsonArrayRequest(UrlConstants.getFriendsUrl(teamId), new Response.Listener<JSONArray>() {
@@ -83,9 +73,6 @@ public class AddIssueActivity extends LivolveActivity{
 						e.printStackTrace();
 					}
 				}
-				
-				adapter = new MyListAdapter(list);
-				listView.setAdapter(adapter);
 			}
 		}, new Response.ErrorListener() {
 
@@ -94,7 +81,7 @@ public class AddIssueActivity extends LivolveActivity{
 			}
 		}));
 	}
-	
+
 	static class ViewHolder {
 		TextView name;
 	}
@@ -106,7 +93,7 @@ public class AddIssueActivity extends LivolveActivity{
 		{
 			this.list = list;
 		}
-		
+
 		MyListAdapter()
 		{
 			this.list = new ArrayList<User>();
@@ -144,7 +131,7 @@ public class AddIssueActivity extends LivolveActivity{
 		}
 
 	}
-	
+
 	@Override
 	public boolean shouldExitOnNewActivityLaunch() {
 		return false;
@@ -159,7 +146,7 @@ public class AddIssueActivity extends LivolveActivity{
 	public String getTag() {
 		return "AddIssueActivity";
 	}
-	
+
 	public void submit(View v) throws JSONException{
 		showMyDialog("Adding issue", "add_issue", DialogType.PROGRESS);
 		JSONObject body = new JSONObject();
@@ -185,13 +172,14 @@ public class AddIssueActivity extends LivolveActivity{
 			}
 		}));
 	}
-	
-	void inviteFriends(String issueID) throws JSONException{
+
+	void inviteFriendsCall(String issueID) throws JSONException{
 		showMyDialog("Inviting friends", "invite_friends", DialogType.PROGRESS);
 		JSONObject body = new JSONObject();
 		body.put("issue_id", issueID);
 		JSONArray jsonArray = new JSONArray();
-		for(int i=0;i<list.size();i++)
+		
+		for(int i=0;i<list.size() && checked[i];i++)
 			jsonArray.put(i,list.get(i).id);
 		body.put("users", jsonArray);
 		Livolve.requestQueue.add(new JsonObjectRequest(UrlConstants.getInviteFriendsUrl(), body, new Response.Listener<JSONObject>() {
@@ -210,4 +198,35 @@ public class AddIssueActivity extends LivolveActivity{
 		}));
 	}
 
+	private boolean[] checked;
+
+	public void inviteFriends(final String issueID){
+		AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+		checked = new boolean[list.size()];
+		CharSequence[] items = new CharSequence[list.size()];
+		for(int i = 0 ;i<list.size();i++){
+			items[i] = list.get(i).name;
+		}
+
+		AlertDialog dialog = builder.setTitle("Select team members").setMultiChoiceItems(items, null, new OnMultiChoiceClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which, boolean isChecked) {
+				checked[which] = isChecked;
+			}
+		}).setPositiveButton("OK", new OnClickListener() {
+
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				try {
+					inviteFriendsCall(issueID);
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
+			}
+		}).create();
+
+		dialog.show();
+	}
 }

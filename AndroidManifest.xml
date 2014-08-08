@@ -12,13 +12,9 @@
         android:protectionLevel="signature" />
 
     <uses-permission android:name="com.hackday.livolve.permission.C2D_MESSAGE" />
-    <!-- App receives GCM messages. -->
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-    <!-- GCM connects to Google Services. -->
     <uses-permission android:name="android.permission.INTERNET" />
-    <!-- GCM requires a Google account. -->
     <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <!-- Keeps the processor from sleeping when a message is received. -->
     <uses-permission android:name="android.permission.WAKE_LOCK" />
 
     <application
@@ -55,7 +51,7 @@
             android:name=".activity.InvitesActivity"
             android:screenOrientation="portrait" />
 
-        <service android:name=".GCMIntentService" />
+        <service android:name=".GCMIntentService" android:enabled="true"/>
 
         <receiver
             android:name="com.google.android.gcm.GCMBroadcastReceiver"

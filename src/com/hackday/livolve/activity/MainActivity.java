@@ -107,6 +107,7 @@ public class MainActivity extends LivolveActivity{
 			GCMRegistrar.register(this, "522992358628");
 		} else {
 			Log.v(TAG, "Already registered");
+			Util.register(this, regId);
 		}
 	}
 

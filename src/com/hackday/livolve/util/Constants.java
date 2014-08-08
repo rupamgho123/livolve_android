@@ -16,4 +16,6 @@ public class Constants {
 	public static final String TEAM_ID = "team_id";
 	public static final String SUMMARY = "summary";
 	public static final String VALUE = "value";
+	
+	public static final String CONVERSATION_ACTION = "com.hackday.livolve.conversation";
 }
